@@ -21,7 +21,7 @@ public class Shooter extends LinearOpMode {
     // MOTOR VALUES \\
     private boolean buttonDown = false; // Turns on if button is down
     private boolean motorsOn = false; // Toggle bool for flywheel motors
-    private boolean prevMotorsOnVal = false; // "Previous 'motorsOn' Value"
+    private boolean prevMotorsOnVal = false; // "Previous 'motorsOn' Value" dhdjdjjdjj
     private double motorSpeed = 1.5;
 
     public void runOpMode() {
