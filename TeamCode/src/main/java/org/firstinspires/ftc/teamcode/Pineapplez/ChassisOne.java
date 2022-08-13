@@ -4,9 +4,10 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 
-@TeleOp(name = "ChassisOneTeleOp", group = "TeleOp")
+@TeleOp(name = "Pinapple", group = "TeleOp")
 public class ChassisOne extends LinearOpMode {
     //All hardware
     protected DcMotor motorFwdLeft = null;
@@ -14,9 +15,10 @@ public class ChassisOne extends LinearOpMode {
     protected DcMotor motorBackLeft = null;
     protected DcMotor motorBackRight = null;
     protected DcMotor clawArm = null;
-    protected DcMotor ducky =null;
+    protected DcMotor ducky = null;
 
     protected Servo claw = null;
+    private ElapsedTime runtime = new ElapsedTime();
 
     //Encoder Values
     // Neverest 40 motor spec: quadrature encoder, 280 pulses per revolution, count = 280 *4
@@ -27,8 +29,12 @@ public class ChassisOne extends LinearOpMode {
     //Variables
     private double max = 1.0;
     double maxPower;
+    double duckyPower = .57;
     double powerLim = 1;
     double moveDir = 1;
+    private double clawMin = 0.722;
+    private double clawMax = 1.16;
+    private double clawPos = 0.0;
 
     /*This function determines the number of ticks a motor
     would need to move in order to achieve a certain degree*/
@@ -50,7 +56,7 @@ public class ChassisOne extends LinearOpMode {
         motorFwdLeft = hardwareMap.get(DcMotor.class, "motorFwdLeft");
         motorBackRight = hardwareMap.get(DcMotor.class, "motorBackRight");
         clawArm = hardwareMap.get(DcMotor.class, "clawArm");
-          ducky = hardwareMap.get(DcMotor.class, "ducky");
+        ducky = hardwareMap.get(DcMotor.class, "ducky");
 
         claw = hardwareMap.get(Servo.class, "claw");
         motorFwdLeft.setDirection(DcMotor.Direction.REVERSE);
@@ -136,45 +142,68 @@ public class ChassisOne extends LinearOpMode {
                 changed4 = false;
             }
 
-            if (gamepad2.left_bumper){
-                clawArm.setPower(0.25);
-            }
-            if (gamepad2.right_bumper){
-                clawArm.setPower(-0.25);
-            }
-
-            if (gamepad2.a){
-                clawArm.setPower(0.25);
-            }
-            if (gamepad2.x){
+            if (gamepad2.left_bumper) {
+                clawArm.setPower(0.75);
+            } else if (!gamepad2.left_bumper) {
                 clawArm.setPower(0);
             }
+
+
+            if (gamepad2.right_bumper) {
+                clawArm.setPower(-0.75);
+            } else if (!gamepad2.right_bumper) {
+                clawArm.setPower(0);
+            }
+
+
+            if (gamepad2.a && !ducky.isBusy()) {
+                long millis = 1100;
+                runtime.reset();
+                while (runtime.milliseconds() <= millis) {
+                    ducky.setPower(duckyPower);
+                    duckyPower = duckyPower * 1.5;
+                }
+
+                /*millis = 600;
+                runtime.reset();
+                while(runtime.milliseconds() <= millis){
+                    ducky.setPower(duckyPower+1.5);
+                }*/
+                ducky.setPower(0);
+            } else if (gamepad2.x && !ducky.isBusy()) {
+                long millis = 1100;
+                runtime.reset();
+                while (runtime.milliseconds() <= millis) {
+                    ducky.setPower(-duckyPower);
+                }
+                millis = 600;
+                runtime.reset();
+                while (runtime.milliseconds() <= millis) {
+                    ducky.setPower(-duckyPower - 1.5);
+                }
+                ducky.setPower(0);
+            }
+
             // TOGGLE FOR CLASS %%%%%%%%%%%%%%%%% \\
-            if (gamepad2.b && !changed5) {//direction change toggle claw
-                claw.setPosition(575);
-                changed5 = true;
-            } else if (!gamepad2.b) {
-                changed5 = false;
-                claw.setPosition(0);
+            if(gamepad2.b && clawPos < clawMax){
+                while(clawPos < clawMax) {
+                    clawPos += 0.3;
+                }
+                claw.setPosition(clawPos);
             }
-
-            if (gamepad2.y && !changed6) {//direction change toggle
-                claw.setPosition(575);
-                changed6 = true;
-            } else if(!gamepad2.y){
-                changed6 = false;
-                claw.setPosition(0);
+            else if(gamepad2.y && clawPos > clawMin){
+                while(clawPos > clawMin) {
+                    clawPos -= .3;
+                }
+                claw.setPosition(clawPos);
             }
 
 
-
-
-
-
-                telemetry.addData("Wheel Position", motorFwdLeft.getCurrentPosition()); //to be used when the encoders are ready
-                telemetry.addData("Max Speed",powerLim);
-                telemetry.addData("Direction",moveDir);
-                telemetry.update();
+            telemetry.addData("Wheel Position", motorFwdLeft.getCurrentPosition()); //to be used when the encoders are ready
+            telemetry.addData("Max Speed", powerLim);
+            telemetry.addData("Direction", moveDir);
+            telemetry.addData("servo", clawPos);
+            telemetry.update();
             }
         }
-    }
+}
