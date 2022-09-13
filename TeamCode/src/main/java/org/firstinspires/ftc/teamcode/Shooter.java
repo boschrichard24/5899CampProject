@@ -19,10 +19,9 @@ public class Shooter extends LinearOpMode {
     protected DcMotor rightShooter  = null;
 
     // MOTOR VALUES \\
-    private boolean buttonDown = false; // Turns on if button is down
     private boolean motorsOn = false; // Toggle bool for flywheel motors
     private boolean prevMotorsOnVal = false; // "Previous 'motorsOn' Value" dhdjdjjdjj
-    private double motorSpeed = 1.5;
+    final double motorSpeed = 1.5;
 
     public void runOpMode() {
         waitForStart();
@@ -35,18 +34,18 @@ public class Shooter extends LinearOpMode {
             leftShooter.setDirection(DcMotor.Direction.FORWARD);
             rightShooter.setDirection(DcMotor.Direction.REVERSE);
 
-            // Bool value is returned from gamepad buttons/bumpers
-            buttonDown = gamepad1.a;
+            // True if button is down (Bool value is returned from gamepad buttons/bumpers)
+            boolean buttonDown = gamepad1.a;
             // Reset prevMOV so the block below can run if needed
             if (!buttonDown) { prevMotorsOnVal = !motorsOn; }
 
-            // This is called only once when you press the button down
+            // Toggle logic (This is called only once as the button is pressed)
             if (buttonDown && motorsOn != prevMotorsOnVal) {
                 motorsOn = !motorsOn;
                 prevMotorsOnVal = motorsOn; // Reset prevMOV
             }
 
-            // Toggle for flywheel motors
+            // Set motor powers
             if (motorsOn) {
                 leftShooter.setPower(motorSpeed);
                 rightShooter.setPower(motorSpeed);
