@@ -60,9 +60,9 @@ public class MainRobotController extends LinearOpMode {
         // Run until driver presses STOP
         while (opModeIsActive()) {
             // Input from the joysticks \\
-            double fwdPower = this.gamepad1.left_stick_y * moveDir; // up and down
-            double strafePower = this.gamepad1.left_stick_x * moveDir; // left and right
-            double turnPower = this.gamepad1.right_stick_x; // turn of robot
+            double fwdPower = this.gamepad1.left_stick_y * moveDir * -1; // up and down
+            double strafePower = this.gamepad1.left_stick_x * moveDir * -1; // left and right
+            double turnPower = this.gamepad1.right_stick_x * -1; // turn of robot
 
             // Math to find the power for every motor \\
             double leftFrontPower = (fwdPower - turnPower - strafePower) * powerLim;
