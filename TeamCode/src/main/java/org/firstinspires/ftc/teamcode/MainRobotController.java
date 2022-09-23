@@ -27,7 +27,21 @@ public class MainRobotController extends LinearOpMode {
     double max = 1.0;
     double maxPower;
     double powerLim = 1;
-    double moveDir = 1;
+    double moveDir = -1;
+
+    // Movement motor powers \\
+    double leftFrontPower;
+    double rightFrontPower;
+    double leftBackPower;
+    double rightBackPower;
+
+    // Previous frames motor powers \\
+    double prevLeftFrontPower;
+    double prevRightFrontPower;
+    double prevLeftBackPower;
+    double prevRightBackPower;
+
+    double[] prevMotorsPowers = {prevLeftFrontPower, prevRightFrontPower, prevLeftBackPower, prevRightBackPower};
 
     /*This function determines the number of ticks a motor
     would need to move in order to achieve a certain degree*/
@@ -36,6 +50,16 @@ public class MainRobotController extends LinearOpMode {
         if (motorNumber == 1) { ans = (int) (degrees * COUNTS_PER_DEGREE1); }
         else { return 1; }
         return ans;
+    }
+
+    private void lerpVal(double val, double prevVal, double motorPow, int minDiff, int divider) {
+        if (Math.abs(val - prevVal) >= minDiff) {
+            motorPow = (val + prevVal) / divider;
+            prevVal = motorPow;
+        } else {
+            motorPow = val;
+            prevVal = val;
+        }
     }
 
     @Override
@@ -60,15 +84,15 @@ public class MainRobotController extends LinearOpMode {
         // Run until driver presses STOP
         while (opModeIsActive()) {
             // Input from the joysticks \\
-            double fwdPower = this.gamepad1.left_stick_y * moveDir * -1; // up and down
-            double strafePower = this.gamepad1.left_stick_x * moveDir * -1; // left and right
-            double turnPower = this.gamepad1.right_stick_x * -1; // turn of robot
+            double fwdPower = this.gamepad1.left_stick_y * moveDir; // up and down
+            double strafePower = this.gamepad1.left_stick_x * moveDir; // left and right
+            double turnPower = this.gamepad1.right_stick_x; // turn of robot
 
             // Math to find the power for every motor \\
-            double leftFrontPower = (fwdPower - turnPower - strafePower) * powerLim;
-            double rightFrontPower = (fwdPower + turnPower - strafePower) * powerLim;
-            double leftBackPower = (fwdPower - turnPower + strafePower) * powerLim;
-            double rightBackPower = (fwdPower + turnPower + strafePower) * powerLim;
+            leftFrontPower = (fwdPower - turnPower - strafePower) * powerLim;
+            rightFrontPower = (fwdPower + turnPower - strafePower) * powerLim;
+            leftBackPower = (fwdPower - turnPower + strafePower) * powerLim;
+            rightBackPower = (fwdPower + turnPower + strafePower) * powerLim;
 
             maxPower = Math.abs(leftFrontPower);
             if (Math.abs(rightFrontPower) > maxPower) {
@@ -87,11 +111,17 @@ public class MainRobotController extends LinearOpMode {
                 rightBackPower = rightBackPower / maxPower;
 
             }
+
             //sets the power of the motors
             motorFwdLeft.setPower(leftFrontPower * max);
             motorFwdRight.setPower(rightFrontPower * max);
             motorBackLeft.setPower(leftBackPower * max);
             motorBackRight.setPower(rightBackPower * max);
+
+            prevLeftFrontPower = leftFrontPower;
+            prevRightFrontPower = rightFrontPower;
+            prevLeftBackPower = leftBackPower;
+            prevRightBackPower = rightBackPower;
 
             // SPEED CHANGE TOGGLE \\
             // (multiplied by speed, so halves speed or leaves it alone) \\
