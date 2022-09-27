@@ -3,8 +3,6 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 @TeleOp(name = "MainRobotController", group = "TeleOp")
@@ -41,7 +39,8 @@ public class MainRobotController extends LinearOpMode {
     double prevLeftBackPower;
     double prevRightBackPower;
 
-    double[] prevMotorsPowers = {prevLeftFrontPower, prevRightFrontPower, prevLeftBackPower, prevRightBackPower};
+    double[] prevMotorPowers;
+    double[] currentMotorPowers;
 
     /*This function determines the number of ticks a motor
     would need to move in order to achieve a certain degree*/
@@ -52,12 +51,19 @@ public class MainRobotController extends LinearOpMode {
         return ans;
     }
 
-    private void lerpVal(double val, double prevVal, double motorPow, int minDiff, int divider) {
-        if (Math.abs(val - prevVal) >= minDiff) {
-            motorPow = (val + prevVal) / divider;
-            prevVal = motorPow;
+    private void lerpVal(double val, double prevVal, double minDiff, int goalTime) {
+        double diff = val - prevVal;
+        int num;
+
+        if (diff > 0) { num = 1; }
+        else { num = -1; }
+
+        if (Math.abs(diff) >= minDiff) {
+            double divider = 1.0 / goalTime;
+            for(int i=1; i<=goalTime; i++) {
+                prevVal = i * divider * num;
+            }
         } else {
-            motorPow = val;
             prevVal = val;
         }
     }
@@ -89,12 +95,13 @@ public class MainRobotController extends LinearOpMode {
             double turnPower = this.gamepad1.right_stick_x; // turn of robot
 
             // Math to find the power for every motor \\
-            leftFrontPower = (fwdPower - turnPower - strafePower) * powerLim;
+            /*leftFrontPower = (fwdPower - turnPower - strafePower) * powerLim;
             rightFrontPower = (fwdPower + turnPower - strafePower) * powerLim;
             leftBackPower = (fwdPower - turnPower + strafePower) * powerLim;
             rightBackPower = (fwdPower + turnPower + strafePower) * powerLim;
+           */
 
-            maxPower = Math.abs(leftFrontPower);
+            /*maxPower = Math.abs(leftFrontPower);
             if (Math.abs(rightFrontPower) > maxPower) {
                 maxPower = Math.abs(rightFrontPower);
             }
@@ -110,18 +117,39 @@ public class MainRobotController extends LinearOpMode {
                 leftBackPower = leftBackPower / maxPower;
                 rightBackPower = rightBackPower / maxPower;
 
+            }*/
+
+            maxPower = Math.abs(prevLeftFrontPower);
+            if (Math.abs(prevRightFrontPower) > maxPower) {
+                maxPower = Math.abs(prevRightFrontPower);
+            }
+            if (Math.abs(prevLeftBackPower) > maxPower) {
+                maxPower = Math.abs(prevLeftBackPower);
+            }
+            if (Math.abs(prevRightBackPower) > maxPower) {
+                maxPower = Math.abs(prevRightBackPower);
+            }
+            if (maxPower > 1) {
+                prevLeftFrontPower = prevLeftFrontPower / maxPower;
+                prevRightFrontPower = prevRightFrontPower / maxPower;
+                prevLeftBackPower = prevLeftBackPower / maxPower;
+                prevRightBackPower = prevRightBackPower / maxPower;
+
+            }
+
+            for (int i=0; i<4; i++) {
+                lerpVal(currentMotorPowers[i], prevMotorPowers[i], 0.1, 10);
             }
 
             //sets the power of the motors
-            motorFwdLeft.setPower(leftFrontPower * max);
+            /*motorFwdLeft.setPower(leftFrontPower * max);
             motorFwdRight.setPower(rightFrontPower * max);
             motorBackLeft.setPower(leftBackPower * max);
-            motorBackRight.setPower(rightBackPower * max);
-
-            prevLeftFrontPower = leftFrontPower;
-            prevRightFrontPower = rightFrontPower;
-            prevLeftBackPower = leftBackPower;
-            prevRightBackPower = rightBackPower;
+            motorBackRight.setPower(rightBackPower * max);*/
+            motorFwdLeft.setPower(prevLeftFrontPower * max);
+            motorFwdRight.setPower(prevRightFrontPower * max);
+            motorBackLeft.setPower(prevLeftBackPower * max);
+            motorBackRight.setPower(prevRightBackPower * max);
 
             // SPEED CHANGE TOGGLE \\
             // (multiplied by speed, so halves speed or leaves it alone) \\
