@@ -26,6 +26,8 @@ public class MainRobotController extends LinearOpMode {
     double maxPower;
     double powerLim = 1;
     double moveDir = -1;
+    double minDiff = 0.1;
+    double goalTime = 5;
 
     // Movement motor powers \\
     double leftFrontPower;
@@ -33,7 +35,10 @@ public class MainRobotController extends LinearOpMode {
     double leftBackPower;
     double rightBackPower;
 
-    double prevFwdPower;
+    double prevLFPow;
+    double prevRFPow;
+    double prevLBPow;
+    double prevRBPow;
 
     /*This function determines the number of ticks a motor
     would need to move in order to achieve a certain degree*/
@@ -42,17 +47,6 @@ public class MainRobotController extends LinearOpMode {
         if (motorNumber == 1) { ans = (int) (degrees * COUNTS_PER_DEGREE1); }
         else { return 1; }
         return ans;
-    }
-
-    private void lerpVal(double val, double prevVal, double minDiff, int goalTime) {
-        double diff = val - prevVal;
-
-        if (Math.abs(diff) >= minDiff) {
-            prevVal += diff / goalTime;
-        } else {
-            prevVal = val;
-            prevFwdPower = prevVal;
-        }
     }
 
     @Override
@@ -79,16 +73,19 @@ public class MainRobotController extends LinearOpMode {
             // Input from the joysticks \\
             double fwdPower = this.gamepad1.left_stick_y * moveDir; // up and down
             double strafePower = this.gamepad1.left_stick_x * moveDir; // left and right
-            double turnPower = this.gamepad1.right_stick_x; // turn of robot
+            double turnPower = -this.gamepad1.right_stick_x; // turn of robot
+
+            double[] powers = { leftFrontPower, rightFrontPower, leftBackPower, rightBackPower };
+            double[] prevPowers = { prevLFPow, prevRFPow, prevLBPow, prevRBPow };
 
             // Math to find the power for every motor \\
-            /*leftFrontPower = (fwdPower - turnPower - strafePower) * powerLim;
+            leftFrontPower = (fwdPower - turnPower - strafePower) * powerLim;
             rightFrontPower = (fwdPower + turnPower - strafePower) * powerLim;
             leftBackPower = (fwdPower - turnPower + strafePower) * powerLim;
             rightBackPower = (fwdPower + turnPower + strafePower) * powerLim;
-           */
 
-            /*maxPower = Math.abs(leftFrontPower);
+
+            maxPower = Math.abs(leftFrontPower);
             if (Math.abs(rightFrontPower) > maxPower) {
                 maxPower = Math.abs(rightFrontPower);
             }
@@ -104,19 +101,23 @@ public class MainRobotController extends LinearOpMode {
                 leftBackPower = leftBackPower / maxPower;
                 rightBackPower = rightBackPower / maxPower;
 
-            }*/
+            }
 
-            lerpVal(fwdPower, prevFwdPower, 0.1, 5);
+            for (int i=0; i<prevPowers.length; i++) {
+                double diff = powers[i] - prevPowers[i];
+
+                if (Math.abs(diff) >= minDiff) {
+                    prevPowers[i] += diff / goalTime;
+                } else {
+                    prevPowers[i] = powers[i];
+                }
+            }
 
             //sets the power of the motors
-            /*motorFwdLeft.setPower(leftFrontPower * max);
+            motorFwdLeft.setPower(leftFrontPower * max);
             motorFwdRight.setPower(rightFrontPower * max);
             motorBackLeft.setPower(leftBackPower * max);
-            motorBackRight.setPower(rightBackPower * max);*/
-            motorFwdLeft.setPower(prevFwdPower);
-            motorFwdRight.setPower(prevFwdPower);
-            motorBackLeft.setPower(prevFwdPower);
-            motorBackRight.setPower(prevFwdPower);
+            motorBackRight.setPower(rightBackPower * max);
 
             // SPEED CHANGE TOGGLE \\
             // (multiplied by speed, so halves speed or leaves it alone) \\
@@ -159,7 +160,6 @@ public class MainRobotController extends LinearOpMode {
             } */
 
             telemetry.addData("Fwd power", fwdPower);
-            telemetry.addData("Prev Fwd power", prevFwdPower);
             telemetry.addData("Max Speed", powerLim);
             telemetry.addData("Direction", moveDir);
             telemetry.update();
