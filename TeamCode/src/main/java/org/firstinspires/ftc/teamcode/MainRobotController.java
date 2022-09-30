@@ -33,14 +33,7 @@ public class MainRobotController extends LinearOpMode {
     double leftBackPower;
     double rightBackPower;
 
-    // Previous frames motor powers \\
-    double prevLeftFrontPower;
-    double prevRightFrontPower;
-    double prevLeftBackPower;
-    double prevRightBackPower;
-
-    double[] prevMotorPowers;
-    double[] currentMotorPowers;
+    double prevFwdPower;
 
     /*This function determines the number of ticks a motor
     would need to move in order to achieve a certain degree*/
@@ -53,18 +46,12 @@ public class MainRobotController extends LinearOpMode {
 
     private void lerpVal(double val, double prevVal, double minDiff, int goalTime) {
         double diff = val - prevVal;
-        int num;
-
-        if (diff > 0) { num = 1; }
-        else { num = -1; }
 
         if (Math.abs(diff) >= minDiff) {
-            double divider = 1.0 / goalTime;
-            for(int i=1; i<=goalTime; i++) {
-                prevVal = i * divider * num;
-            }
+            prevVal += diff / goalTime;
         } else {
             prevVal = val;
+            prevFwdPower = prevVal;
         }
     }
 
@@ -119,37 +106,17 @@ public class MainRobotController extends LinearOpMode {
 
             }*/
 
-            maxPower = Math.abs(prevLeftFrontPower);
-            if (Math.abs(prevRightFrontPower) > maxPower) {
-                maxPower = Math.abs(prevRightFrontPower);
-            }
-            if (Math.abs(prevLeftBackPower) > maxPower) {
-                maxPower = Math.abs(prevLeftBackPower);
-            }
-            if (Math.abs(prevRightBackPower) > maxPower) {
-                maxPower = Math.abs(prevRightBackPower);
-            }
-            if (maxPower > 1) {
-                prevLeftFrontPower = prevLeftFrontPower / maxPower;
-                prevRightFrontPower = prevRightFrontPower / maxPower;
-                prevLeftBackPower = prevLeftBackPower / maxPower;
-                prevRightBackPower = prevRightBackPower / maxPower;
-
-            }
-
-            for (int i=0; i<4; i++) {
-                lerpVal(currentMotorPowers[i], prevMotorPowers[i], 0.1, 10);
-            }
+            lerpVal(fwdPower, prevFwdPower, 0.1, 5);
 
             //sets the power of the motors
             /*motorFwdLeft.setPower(leftFrontPower * max);
             motorFwdRight.setPower(rightFrontPower * max);
             motorBackLeft.setPower(leftBackPower * max);
             motorBackRight.setPower(rightBackPower * max);*/
-            motorFwdLeft.setPower(prevLeftFrontPower * max);
-            motorFwdRight.setPower(prevRightFrontPower * max);
-            motorBackLeft.setPower(prevLeftBackPower * max);
-            motorBackRight.setPower(prevRightBackPower * max);
+            motorFwdLeft.setPower(prevFwdPower);
+            motorFwdRight.setPower(prevFwdPower);
+            motorBackLeft.setPower(prevFwdPower);
+            motorBackRight.setPower(prevFwdPower);
 
             // SPEED CHANGE TOGGLE \\
             // (multiplied by speed, so halves speed or leaves it alone) \\
@@ -191,7 +158,8 @@ public class MainRobotController extends LinearOpMode {
                 ducky.setPower(0);
             } */
 
-            telemetry.addData("Wheel Position", motorFwdLeft.getCurrentPosition()); //to be used when the encoders are ready
+            telemetry.addData("Fwd power", fwdPower);
+            telemetry.addData("Prev Fwd power", prevFwdPower);
             telemetry.addData("Max Speed", powerLim);
             telemetry.addData("Direction", moveDir);
             telemetry.update();
