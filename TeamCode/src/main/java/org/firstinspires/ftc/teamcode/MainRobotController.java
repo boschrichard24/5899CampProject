@@ -65,6 +65,8 @@ public class MainRobotController extends LinearOpMode {
         // Toggle variables
         boolean changed3 = false;
         boolean changed4 = false;
+        boolean changed5 = false;
+        boolean changed6 = false;
 
         // Wait for driver to press PLAY
         waitForStart();
@@ -80,9 +82,9 @@ public class MainRobotController extends LinearOpMode {
 
             // Math to find the power for every motor \\
             leftFrontPower = (fwdPower - turnPower - strafePower) * powerLim;
-            rightFrontPower = (fwdPower + turnPower - strafePower) * powerLim;
+            rightFrontPower = (fwdPower + turnPower + strafePower) * powerLim;
             leftBackPower = (fwdPower - turnPower + strafePower) * powerLim;
-            rightBackPower = (fwdPower + turnPower + strafePower) * powerLim;
+            rightBackPower = (fwdPower + turnPower - strafePower) * powerLim;
 
 
             maxPower = Math.abs(leftFrontPower);
@@ -138,6 +140,22 @@ public class MainRobotController extends LinearOpMode {
                 changed4 = false;
             }
 
+            if (gamepad1.y && !changed5 && !gamepad1.x) {
+                goalTime++;
+                changed5 = true;
+            } else if (!gamepad1.y) {
+                changed5 = false;
+            }
+
+            if (gamepad1.x && !changed6 && goalTime > 0 && !gamepad1.y) {
+                goalTime--;
+                changed6 = true;
+            } else if (!gamepad1.y) {
+                changed6 = false;
+            }
+
+
+
             /*if (gamepad2.a && !ducky.isBusy()) {
                 long millis = 1100;
                 runtime.reset();
@@ -160,7 +178,9 @@ public class MainRobotController extends LinearOpMode {
                 ducky.setPower(0);
             } */
 
-            telemetry.addData("Fwd power", fwdPower);
+            telemetry.addData("Fwd Power", fwdPower);
+            telemetry.addData("Smoothed RB Power", prevRBPow);
+            telemetry.addData("Goal Smooth Time", goalTime);
             telemetry.addData("Max Speed", powerLim);
             telemetry.addData("Direction", moveDir);
             telemetry.update();
