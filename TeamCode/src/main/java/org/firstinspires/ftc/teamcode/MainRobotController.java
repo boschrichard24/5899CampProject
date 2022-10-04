@@ -40,6 +40,9 @@ public class MainRobotController extends LinearOpMode {
     double prevLBPow;
     double prevRBPow;
 
+    // left front, right front, left back, right back
+    double[] prevPowers = { 0.0, 0.0, 0.0, 0.0 };
+
     /*This function determines the number of ticks a motor
     would need to move in order to achieve a certain degree*/
     private int getCountsPerDegree(double degrees, int motorNumber) {
@@ -78,14 +81,12 @@ public class MainRobotController extends LinearOpMode {
             double turnPower = this.gamepad1.right_stick_x; // turn of robot
 
             double[] powers = { leftFrontPower, rightFrontPower, leftBackPower, rightBackPower };
-            double[] prevPowers = { prevLFPow, prevRFPow, prevLBPow, prevRBPow };
 
             // Math to find the power for every motor \\
             leftFrontPower = (fwdPower - turnPower - strafePower) * powerLim;
             rightFrontPower = (fwdPower + turnPower + strafePower) * powerLim;
             leftBackPower = (fwdPower - turnPower + strafePower) * powerLim;
             rightBackPower = (fwdPower + turnPower - strafePower) * powerLim;
-
 
             maxPower = Math.abs(leftFrontPower);
             if (Math.abs(rightFrontPower) > maxPower) {
@@ -102,25 +103,24 @@ public class MainRobotController extends LinearOpMode {
                 rightFrontPower = rightFrontPower / maxPower;
                 leftBackPower = leftBackPower / maxPower;
                 rightBackPower = rightBackPower / maxPower;
-
             }
 
             // Smoothing of motor power values with previous values
             for (int i=0; i<prevPowers.length; i++) {
                 double diff = powers[i] - prevPowers[i];
-
                 if (Math.abs(diff) >= minDiff) {
                     prevPowers[i] += diff / goalTime;
+                    telemetry.addData("Prev pow: ", prevPowers[i]);
                 } else {
                     prevPowers[i] = powers[i];
                 }
             }
 
             //sets the power of the motors
-            motorFwdLeft.setPower(leftFrontPower * max);
-            motorFwdRight.setPower(rightFrontPower * max);
-            motorBackLeft.setPower(leftBackPower * max);
-            motorBackRight.setPower(rightBackPower * max);
+            motorFwdLeft.setPower(prevPowers[0] * max);
+            motorFwdRight.setPower(prevPowers[1] * max);
+            motorBackLeft.setPower(prevPowers[2] * max);
+            motorBackRight.setPower(prevPowers[3] * max);
 
             // SPEED CHANGE TOGGLE \\
             // (multiplied by speed, so halves speed or leaves it alone) \\
@@ -150,7 +150,7 @@ public class MainRobotController extends LinearOpMode {
             if (gamepad1.x && !changed6 && goalTime > 0 && !gamepad1.y) {
                 goalTime--;
                 changed6 = true;
-            } else if (!gamepad1.y) {
+            } else if (!gamepad1.x) {
                 changed6 = false;
             }
 
