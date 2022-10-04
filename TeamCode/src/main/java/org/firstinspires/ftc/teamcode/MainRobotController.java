@@ -25,7 +25,7 @@ public class MainRobotController extends LinearOpMode {
     double max = 1.0;
     double maxPower;
     double powerLim = 1;
-    double moveDir = -1;
+    double moveDir = 1;
     double minDiff = 0.1;
     double goalTime = 5;
 
@@ -73,7 +73,7 @@ public class MainRobotController extends LinearOpMode {
             // Input from the joysticks \\
             double fwdPower = this.gamepad1.left_stick_y * moveDir; // up and down
             double strafePower = this.gamepad1.left_stick_x * moveDir; // left and right
-            double turnPower = -this.gamepad1.right_stick_x; // turn of robot
+            double turnPower = this.gamepad1.right_stick_x; // turn of robot
 
             double[] powers = { leftFrontPower, rightFrontPower, leftBackPower, rightBackPower };
             double[] prevPowers = { prevLFPow, prevRFPow, prevLBPow, prevRBPow };
@@ -103,6 +103,7 @@ public class MainRobotController extends LinearOpMode {
 
             }
 
+            // Smoothing of motor power values with previous values
             for (int i=0; i<prevPowers.length; i++) {
                 double diff = powers[i] - prevPowers[i];
 
