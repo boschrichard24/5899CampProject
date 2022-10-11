@@ -24,21 +24,17 @@ public class MainRobotController extends LinearOpMode {
     // Movement Variables \\
     double max = 1.0;
     double maxPower;
+    double maxSpeed = 0.7;
     double powerLim = 1;
     double moveDir = 1;
     double minDiff = 0.1;
-    double goalTime = 5;
+    double goalTime = 5.0;
 
     // Movement motor powers \\
     double leftFrontPower;
     double rightFrontPower;
     double leftBackPower;
     double rightBackPower;
-
-    double prevLFPow;
-    double prevRFPow;
-    double prevLBPow;
-    double prevRBPow;
 
     // left front, right front, left back, right back
     double[] prevPowers = { 0.0, 0.0, 0.0, 0.0 };
@@ -110,9 +106,17 @@ public class MainRobotController extends LinearOpMode {
                 double diff = powers[i] - prevPowers[i];
                 if (Math.abs(diff) >= minDiff) {
                     prevPowers[i] += diff / goalTime;
-                    telemetry.addData("Prev pow: ", prevPowers[i]);
                 } else {
                     prevPowers[i] = powers[i];
+                }
+
+                // Maxing out the speed
+                if (Math.abs(prevPowers[i]) > maxSpeed) {
+                    if (prevPowers[i] < 0) {
+                        prevPowers[i] = maxSpeed * -1;
+                    } else {
+                        prevPowers[i] = maxSpeed;
+                    }
                 }
             }
 
@@ -140,21 +144,21 @@ public class MainRobotController extends LinearOpMode {
                 changed4 = false;
             }
 
-            if (gamepad1.y && !changed5 && !gamepad1.x) {
-                goalTime++;
+            /*if (gamepad1.y && !changed5 && !gamepad1.x && maxSpeed <= 1) {
+                maxSpeed += 0.1;
+                //goalTime++;
                 changed5 = true;
             } else if (!gamepad1.y) {
                 changed5 = false;
             }
 
-            if (gamepad1.x && !changed6 && goalTime > 0 && !gamepad1.y) {
-                goalTime--;
+            if (gamepad1.x && !changed6 && !gamepad1.y && maxSpeed > 0) {
+                maxSpeed -= 0.1;
+                //goalTime--;
                 changed6 = true;
             } else if (!gamepad1.x) {
                 changed6 = false;
-            }
-
-
+            } */
 
             /*if (gamepad2.a && !ducky.isBusy()) {
                 long millis = 1100;
@@ -179,8 +183,8 @@ public class MainRobotController extends LinearOpMode {
             } */
 
             telemetry.addData("Fwd Power", fwdPower);
-            telemetry.addData("Smoothed RB Power", prevRBPow);
-            telemetry.addData("Goal Smooth Time", goalTime);
+            telemetry.addData("Smoothed RB Power", prevPowers[0]);
+            telemetry.addData("MaxSpeed", maxSpeed);
             telemetry.addData("Max Speed", powerLim);
             telemetry.addData("Direction", moveDir);
             telemetry.update();
