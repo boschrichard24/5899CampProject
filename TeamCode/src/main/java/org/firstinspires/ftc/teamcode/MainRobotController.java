@@ -22,13 +22,13 @@ public class MainRobotController extends LinearOpMode {
     private static final double COUNTS_PER_DEGREE1 = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION1) / 360;
 
     // Movement Variables \\
-    double max = 1.0;
     double maxPower;
     double maxSpeed = 0.7;
     double powerLim = 1;
     double moveDir = 1;
     double minDiff = 0.1;
     double goalTime = 5.0;
+
 
     // Movement motor powers \\
     double leftFrontPower;
@@ -104,7 +104,8 @@ public class MainRobotController extends LinearOpMode {
             // Smoothing of motor power values with previous values
             for (int i=0; i<prevPowers.length; i++) {
                 double diff = powers[i] - prevPowers[i];
-                if (Math.abs(diff) >= minDiff) {
+                // "If there's enough joystick change and the robot isn't turning..."
+                if (Math.abs(diff) >= minDiff && Math.abs(strafePower) <= minDiff) {
                     prevPowers[i] += diff / goalTime;
                 } else {
                     prevPowers[i] = powers[i];
@@ -120,11 +121,11 @@ public class MainRobotController extends LinearOpMode {
                 }
             }
 
-            //sets the power of the motors
-            motorFwdLeft.setPower(prevPowers[0] * max);
-            motorFwdRight.setPower(prevPowers[1] * max);
-            motorBackLeft.setPower(prevPowers[2] * max);
-            motorBackRight.setPower(prevPowers[3] * max);
+            // Sets the power of the motors
+            motorFwdLeft.setPower(prevPowers[0]);
+            motorFwdRight.setPower(prevPowers[1]);
+            motorBackLeft.setPower(prevPowers[2]);
+            motorBackRight.setPower(prevPowers[3]);
 
             // SPEED CHANGE TOGGLE \\
             // (multiplied by speed, so halves speed or leaves it alone) \\
@@ -185,7 +186,7 @@ public class MainRobotController extends LinearOpMode {
             telemetry.addData("Fwd Power", fwdPower);
             telemetry.addData("Smoothed RB Power", prevPowers[0]);
             telemetry.addData("MaxSpeed", maxSpeed);
-            telemetry.addData("Max Speed", powerLim);
+            telemetry.addData("Speed", powerLim);
             telemetry.addData("Direction", moveDir);
             telemetry.update();
         }
