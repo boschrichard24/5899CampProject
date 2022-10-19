@@ -25,9 +25,9 @@ public class MainRobotController extends LinearOpMode {
     double maxPower;
     double maxSpeed = 0.7;
     double powerLim = 1;
-    double moveDir = 1;
+    double moveDir = -1;
     double minDiff = 0.1;
-    double goalTime = 5.0;
+    double goalTime = 10.0;
 
 
     // Movement motor powers \\
@@ -78,11 +78,16 @@ public class MainRobotController extends LinearOpMode {
 
             double[] powers = { leftFrontPower, rightFrontPower, leftBackPower, rightBackPower };
 
+            boolean turning = Math.abs(turnPower) > minDiff; // True if turning
+            boolean strafing = Math.abs(strafePower) > minDiff; // True if strafing
+
+            boolean halfSpeed = false;
+
             // Math to find the power for every motor \\
-            leftFrontPower = (fwdPower - turnPower - strafePower) * powerLim;
-            rightFrontPower = (fwdPower + turnPower + strafePower) * powerLim;
-            leftBackPower = (fwdPower - turnPower + strafePower) * powerLim;
-            rightBackPower = (fwdPower + turnPower - strafePower) * powerLim;
+            leftFrontPower = (fwdPower + turnPower - strafePower) * powerLim;
+            rightFrontPower = (fwdPower - turnPower + strafePower) * powerLim;
+            leftBackPower = (fwdPower + turnPower + strafePower) * powerLim;
+            rightBackPower = (fwdPower - turnPower - strafePower) * powerLim;
 
             maxPower = Math.abs(leftFrontPower);
             if (Math.abs(rightFrontPower) > maxPower) {
@@ -103,9 +108,11 @@ public class MainRobotController extends LinearOpMode {
 
             // Smoothing of motor power values with previous values
             for (int i=0; i<prevPowers.length; i++) {
-                double diff = powers[i] - prevPowers[i];
-                // "If there's enough joystick change and the robot isn't turning..."
-                if (Math.abs(diff) >= minDiff && Math.abs(strafePower) <= minDiff) {
+                double diff = powers[i] - prevPowers[i]; // Used for smoothing
+                double change = Math.abs(powers[i]) - Math.abs(prevPowers[i]); // Used for check if going forward or backward
+
+                // "If there's enough joystick change and the robot isn't turning nor strafing..."
+                if (change >= minDiff && !strafing && !turning) {
                     prevPowers[i] += diff / goalTime;
                 } else {
                     prevPowers[i] = powers[i];
@@ -119,6 +126,7 @@ public class MainRobotController extends LinearOpMode {
                         prevPowers[i] = maxSpeed;
                     }
                 }
+                telemetry.addData("Motor power", prevPowers[i]);
             }
 
             // Sets the power of the motors
@@ -130,12 +138,22 @@ public class MainRobotController extends LinearOpMode {
             // SPEED CHANGE TOGGLE \\
             // (multiplied by speed, so halves speed or leaves it alone) \\
             if (gamepad1.b && !changed3) {
-                if (powerLim == .5) { powerLim = 1; }
-                else { powerLim = .5; }
+                if (powerLim == .5) {
+                    powerLim = 1;
+                    halfSpeed = false;
+                }
+                else {
+                    powerLim = .5;
+                    halfSpeed = true;
+                }
                 changed3 = true;
             } else if (!gamepad1.b) {
                 changed3 = false;
             }
+
+            // When robot is turning, ignore halving of speed (feels really slow)
+            if (halfSpeed && turning) { powerLim = 1; }
+            else if (halfSpeed && powerLim == 1) { powerLim = .5; }
 
             // DIRECTION CHANGE TOGGLE \\
             if (gamepad1.a && !changed4) {
@@ -184,7 +202,7 @@ public class MainRobotController extends LinearOpMode {
             } */
 
             telemetry.addData("Fwd Power", fwdPower);
-            telemetry.addData("Smoothed RB Power", prevPowers[0]);
+            //telemetry.addData("Smoothed RB Power", prevPowers[0]);
             telemetry.addData("MaxSpeed", maxSpeed);
             telemetry.addData("Speed", powerLim);
             telemetry.addData("Direction", moveDir);
